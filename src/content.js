@@ -6,7 +6,7 @@ window.addEventListener('load', function () {
     console.log(">Troo-x-video-downloader: Checking domain");
     const currentDomain = window.location.hostname;
 
-    if (currentDomain != "www.tests.com") {
+    if (currentDomain != "www.deezer.com") { // SFW
         console.log(">Troo-x-video-downloader: Not the expected domain");
         return;
     }

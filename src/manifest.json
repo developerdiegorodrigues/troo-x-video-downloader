@@ -3,6 +3,16 @@
     "name": "Troo x-video downloader",
     "version": "1.0",
     "description": "An automatic video downloader for your favorite streaming platform",
+    "author": "Diego Rodrigues - @devdiegorodrigues",
+    "developer": {
+        "name": "Diego Rodrigues - @devdiegorodrigues"
+    },
+    "icons": {
+        "512": "img/icon_512.png",
+        "128": "img/icon_128.png",
+        "48": "img/icon_48.png",
+        "32": "img/icon_32.png"
+    },
     "permissions": [
         "tabs",
         "http://*/",

@@ -11,8 +11,10 @@ var eTROO = new Object({
     htmlData: 'view/content.html',
     cssData: 'view/style.css',
     timerElements: null,
+    elementWindow: null,
     elementSpanLoading: null,
     elementCheckBoxAuto: null,
+    elementCheckBoxAutoLabel: null,
     elementButtonExpand: null,
     elementButtonDownload: null,
     elementTextarea: null,
@@ -21,6 +23,10 @@ var eTROO = new Object({
     videoList: [],
     videoTotalData: null,
     memoryError: null,
+    keyAutomaticDownload: 'eTROO_AutomaticDownload',
+    keyFullView: 'eTROO_FullView',
+    automaticDownload: false,
+    fullView: true,
 
     start: function () {
         if (this.started) return;
@@ -64,31 +70,55 @@ var eTROO = new Object({
     checkElements: function () {
         this.timerElements = setInterval(() => {
             console.info('>eTROO: Await elements initialization');
+            this.elementWindow = document.getElementById("extension-content");
             this.elementSpanLoading = document.getElementById("ext-el-loading");
             this.elementCheckBoxAuto = document.getElementById("ext-el-auto");
+            this.elementCheckBoxAutoLabel = document.getElementById("ext-el-auto-label");
             this.elementButtonExpand = document.getElementById("ext-el-expand");
             this.elementButtonDownload = document.getElementById("ext-el-download");
             this.elementTextarea = document.getElementById("ext-el-textarea");
-            if (this.elementSpanLoading || this.elementCheckBoxAuto || this.elementButtonExp || this.elementButtonDownload || this.elementTextarea) {
+            if (
+                this.elementWindow &&
+                this.elementSpanLoading &&
+                this.elementCheckBoxAuto &&
+                this.elementCheckBoxAutoLabel &&
+                this.elementButtonExpand &&
+                this.elementButtonDownload &&
+                this.elementTextarea
+            ) {
                 clearInterval(this.timerElements);
                 console.info('>eTROO: Elements found');
+                this.loadConfigurations();
                 this.registerElementsListener();
+                this.elementCheckBoxAuto.classList.remove("disabled");
+                this.elementCheckBoxAutoLabel.classList.remove("disabled");
+                this.elementButtonExpand.classList.remove("disabled");
             }
         }, 250);
     },
     registerElementsListener: function () {
         this.elementCheckBoxAuto.addEventListener("click", (event) => {
-            localStorage.setItem('eTROO_elementCheckBoxAuto', event.target.checked);
-            var value = localStorage.getItem('eTROO_elementCheckBoxAuto');
-            console.log('Dados recuperados:', value);
+            this.checkBoxAutoProcess(event);
         });
-        this.elementButtonExpand.addEventListener("click", (event) => {
-            console.log(event.target);
-            console.log(event);
+        this.elementButtonExpand.addEventListener("click", () => {
+            this.buttonExpandProcess();
         });
         this.elementButtonDownload.addEventListener("click", () => {
             this.startDownloadVideo();
         });
+    },
+    loadConfigurations: function () {
+        console.info('>eTROO: Loading configurations');
+        const cAutoDownload = localStorage.getItem(this.keyAutomaticDownload).toString();
+        if (cAutoDownload == 'true') {
+            this.automaticDownload = true;
+            this.elementCheckBoxAuto.checked = true;
+        }
+        const cFullView = localStorage.getItem(this.keyFullView).toString();
+        if (cFullView == 'false') {
+            this.fullView = false;
+            this.elementWindow.classList.add("extension-hide");
+        }
     },
     inject: function () {
         console.info('>eTROO: Injecting dependencies');
@@ -117,7 +147,7 @@ var eTROO = new Object({
         });
     },
     generateVideoList: async function () {
-        console.info('>eTROO: Generating files list');
+        console.info('>eTROO: Generating video list');
         let index = 0;
         this.targetUrl = this.targetUrl.slice(0, -4);
         this.filesBaseName = this.targetUrl.split('/').pop();
@@ -136,7 +166,12 @@ var eTROO = new Object({
                 break;
             }
         }
-        console.info('>eTROO: Generated files list');
+        console.info('>eTROO: Generated video list');
+        this.elementButtonDownload.classList.remove("disabled");
+        
+        if (this.automaticDownload) {
+            this.startDownloadVideo();
+        }
     },
     startDownloadVideo: async function () {
         console.info('>eTROO: Starting download video');
@@ -147,6 +182,7 @@ var eTROO = new Object({
         this.videoTotalData = [];
         this.memoryError = false;
         let index = 0;
+        this.elementSpanLoading.classList.remove("invisible");
         for (const url of this.videoList) {
             index++;
             try {
@@ -154,10 +190,12 @@ var eTROO = new Object({
                 console.info('>eTROO: Successfully added', url.split('/').pop(), 'to download list');
             } catch (error) {
                 this.videoTotalData = [];
+                this.elementSpanLoading.classList.add("invisible");
                 console.info('>eTROO: Download failed');
                 return;
             }
         }
+        this.elementSpanLoading.classList.add("invisible");
     },
     startDownloadPicture: async function () {
         console.info('>eTROO: Starting download picture');
@@ -234,16 +272,42 @@ var eTROO = new Object({
         document.body.removeChild(link);
         console.log('>eTROO: Picture downloaded:', this.filesBaseName);
     },
+    checkBoxAutoProcess: function (data) {
+        localStorage.setItem(this.keyAutomaticDownload, data.target.checked);
+    },
+    buttonExpandProcess: function () {
+        console.info('>eTROO: Change visibility status');
+        if (this.fullView) {
+            this.fullView = false;
+            localStorage.setItem(this.keyFullView, this.fullView);
+            this.elementWindow.classList.add("extension-hide");
+        } else {
+            this.fullView = true;
+            localStorage.setItem(this.keyFullView, this.fullView);
+            this.elementWindow.classList.remove("extension-hide");
+        }
+    },
     destroy: function () {
         this.destroyed = true;
-        console.info('>eTROO: Exiting...');
+        console.info('>eTROO: Exiting');
     }
 });
 window.addEventListener('load', function () {
     eTROO.start();
 });
 
-
+/* Safe for work */
+(() => {
+    const page = document.getElementById('page');
+    if (page) page.classList.add('invisible');
+    const head__top = document.querySelector('.head__top');
+    if (head__top) head__top.classList.add('invisible');
+    const head__menu_line = document.querySelector('.head__menu-line');
+    if (head__menu_line) head__menu_line.classList.add('invisible');
+    const head__menu_mobile = document.querySelector('.mobile-portrait-show');
+    if (head__menu_mobile) head__menu_mobile.classList.add('invisible');
+    document.title = "Hide";
+})();
 
 
 

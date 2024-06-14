@@ -1,6 +1,6 @@
 (function () {
+    console.log('>eTROO: Await HTML5player initialization');
     var timerInterval = setInterval(() => {
-        console.log('>eTROO: Await HTML5player initialization');
         if (window?.html5player) {
             clearInterval(timerInterval);
             console.info('>eTROO: HTML5player found');
@@ -10,5 +10,5 @@
             }
             window.postMessage({ type: 'FROM_PAGE', content: html5Player.__extractData() }, '*');
         }
-    }, 250);
+    }, 500);
 })();

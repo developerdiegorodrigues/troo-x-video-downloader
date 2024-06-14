@@ -1,9 +1,49 @@
 <div id="extension-content">
-    
-    <span id="ext-el-loading">loading</span>
-    <input id="ext-el-auto" type="checkbox">auto</input>
-    <button id="ext-el-expand">expand</button>
-    <button id="ext-el-download">dowload</button>
-    <textarea id="ext-el-textarea">textarea</textarea>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons%7CMaterial+Icons+Outlined%7CMaterial+Icons+Two+Tone%7CMaterial+Icons+Round%7CMaterial+Icons+Sharp%7CMaterial+Symbols+Outlined">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> -->
 
+    <div class="extension-container">
+
+        <!-- Top content -->
+        <div class="ext-top-box">
+            <div class="ext-top-frame">
+                <span class="material-icons-outlined ext-frame-icon">
+                    cloud_download
+                </span>
+            </div>
+
+            <div class="ext-top-frame">
+                <span id="ext-el-loading" class="material-icons-outlined loading-animation invisible">
+                    rotate_right
+                </span>
+            </div>
+
+            <div class="ext-top-frame">
+                <button id="ext-el-download" type="button" class="btn btn-primary disabled" title="Dowload video">
+                    Dowload
+                </button>
+            </div>
+
+            <div class="ext-top-frame">
+                <button id="ext-el-expand" type="button" class="btn btn-primary disabled" title="Change visibility mode">
+                    <span class="material-icons-outlined fs-3">
+                        visibility
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom content -->
+        <div class="ext-bottom-box">
+            <div class="ww-100 checkbox-frame">
+                <input id="ext-el-auto" type="checkbox" class="form-check-input disabled" title="Automatically download when opening the tab">
+                <label id="ext-el-auto-label" for="ext-el-auto" class="disabled">
+                    Automatic download
+                </label>
+            </div>
+            <div class="text-area-frame">
+                <textarea id="ext-el-textarea" readonly class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
 </div>

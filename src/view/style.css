@@ -1,0 +1,13 @@
+#extension-content {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    width: 200px;
+    height: 150px;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: black;
+}

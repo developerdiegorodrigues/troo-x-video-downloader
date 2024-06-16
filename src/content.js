@@ -4,7 +4,7 @@
  * 
  */
 
-"use strict";
+'use strict';
 var eTROO = new Object({
     started: false,
     targetDomain: 'www.xvideos.com',
@@ -13,6 +13,8 @@ var eTROO = new Object({
     timerElements: null,
     elementWindow: null,
     elementSpanLoading: null,
+    elementCheckBoxHigh: null,
+    elementCheckBoxHighLabel: null,
     elementCheckBoxAuto: null,
     elementCheckBoxAutoLabel: null,
     elementButtonExpand: null,
@@ -20,193 +22,237 @@ var eTROO = new Object({
     elementTextarea: null,
     targetUrl: null,
     filesBaseName: null,
-    videoList: [],
+    videoListQuantity: 0,
     videoTotalData: null,
     memoryError: null,
     keyAutomaticDownload: 'eTROO_AutomaticDownload',
-    keyFullView: 'eTROO_FullView',
     automaticDownload: false,
+    keyHighQuality: 'eTROO_FullQuality',
+    highQuality: false,
+    keyFullView: 'eTROO_FullView',
     fullView: true,
+    keyHostQuality: 'forcequality',
+    allMessages: '',
 
     start: function () {
         if (this.started) return;
         this.started = true;
 
-        console.info('>eTROO: Started');
+        this.alert(['Started'], 'info');
         if (!this.checkDomain()) return this.destroy();
-        if (!this.inject()) return this.destroy();
         if (!this.loadInterface()) return this.destroy();
-        this.receive();
+        if (!this.inject()) return this.destroy();
         this.checkElements();
+        this.receive();
+    },
+    alert: function (messages, type) {
+        if (Array.isArray(messages)) {
+            const time = new Date();
+            const hour = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+            this.allMessages = `${this.allMessages} ${hour} - ${messages.join(' ')}\n`;
+            if (this.elementTextarea) {
+                this.elementTextarea.value = this.allMessages;
+                this.elementTextarea.scrollTop = this.elementTextarea.scrollHeight;
+            }
+            switch (type) {
+                case 'info':
+                    console.info(...messages);
+                    break;
+                case 'warn':
+                    console.warn(...messages);
+                    break;
+                case 'error':
+                    throw new Error(...messages);
+                default:
+                    console.log(...messages);
+
+            }
+        }
     },
     checkDomain: function () {
-        console.info('>eTROO: Checking domain');
+        this.alert(['Checking domain'], 'info');
         if (this.targetDomain != window.location.hostname) {
-            console.info('>eTROO: Not expected domain');
+            this.alert(['Not expected domain'], 'info');
             return false;
         }
         return true;
     },
     loadInterface: async function () {
-        console.info('>eTROO: Loading interface');
+        this.alert(['Loading interface'], 'info');
         await fetch(chrome.runtime.getURL(this.htmlData))
             .then(response => response.text())
             .then(data => {
                 const container = document.createElement('div');
-                container.innerHTML = data;
                 const style = document.createElement('link');
+                container.innerHTML = data;
+                style.href = chrome.runtime.getURL(this.cssData);
                 style.rel = 'stylesheet';
                 style.type = 'text/css';
-                style.href = chrome.runtime.getURL(this.cssData);
-                document.head.appendChild(style);
                 document.body.appendChild(container);
+                document.head.appendChild(style);
             })
             .catch(error => {
-                console.error(`>Troo-x-video-downloader: Error fetching file content - ${JSON.stringify(error)}`);
+                this.alert(['Error fetching file content', error], 'error');
                 return false;
             });
         return true;
     },
-    checkElements: function () {
-        this.timerElements = setInterval(() => {
-            console.info('>eTROO: Await elements initialization');
-            this.elementWindow = document.getElementById("extension-content");
-            this.elementSpanLoading = document.getElementById("ext-el-loading");
-            this.elementCheckBoxAuto = document.getElementById("ext-el-auto");
-            this.elementCheckBoxAutoLabel = document.getElementById("ext-el-auto-label");
-            this.elementButtonExpand = document.getElementById("ext-el-expand");
-            this.elementButtonDownload = document.getElementById("ext-el-download");
-            this.elementTextarea = document.getElementById("ext-el-textarea");
-            if (
-                this.elementWindow &&
-                this.elementSpanLoading &&
-                this.elementCheckBoxAuto &&
-                this.elementCheckBoxAutoLabel &&
-                this.elementButtonExpand &&
-                this.elementButtonDownload &&
-                this.elementTextarea
-            ) {
-                clearInterval(this.timerElements);
-                console.info('>eTROO: Elements found');
-                this.loadConfigurations();
-                this.registerElementsListener();
-                this.elementCheckBoxAuto.classList.remove("disabled");
-                this.elementCheckBoxAutoLabel.classList.remove("disabled");
-                this.elementButtonExpand.classList.remove("disabled");
-            }
-        }, 250);
-    },
-    registerElementsListener: function () {
-        this.elementCheckBoxAuto.addEventListener("click", (event) => {
-            this.checkBoxAutoProcess(event);
-        });
-        this.elementButtonExpand.addEventListener("click", () => {
-            this.buttonExpandProcess();
-        });
-        this.elementButtonDownload.addEventListener("click", () => {
-            this.startDownloadVideo();
-        });
-    },
-    loadConfigurations: function () {
-        console.info('>eTROO: Loading configurations');
-        const cAutoDownload = localStorage.getItem(this.keyAutomaticDownload).toString();
-        if (cAutoDownload == 'true') {
-            this.automaticDownload = true;
-            this.elementCheckBoxAuto.checked = true;
-        }
-        const cFullView = localStorage.getItem(this.keyFullView).toString();
-        if (cFullView == 'false') {
-            this.fullView = false;
-            this.elementWindow.classList.add("extension-hide");
-        }
-    },
     inject: function () {
-        console.info('>eTROO: Injecting dependencies');
+        this.alert(['Injecting dependencies'], 'info');
         const script = document.createElement('script');
         script.src = chrome.runtime.getURL('pageScript.js');
         try {
             document.head.appendChild(script);
         } catch (error) {
-            console.error('>Troo-x-video-downloader: Error fetching file content', error);
+            this.alert(['Error fetching file content', error], 'error');
             return false;
         }
         return true;
     },
+    checkElements: function () {
+        this.timerElements = setInterval(() => {
+            this.alert(['Await elements initialization'], 'info');
+            this.elementWindow = document.getElementById('extension-content');
+            this.elementSpanLoading = document.getElementById('ext-el-loading');
+            this.elementCheckBoxAuto = document.getElementById('ext-el-auto');
+            this.elementCheckBoxAutoLabel = document.getElementById('ext-el-auto-label');
+            this.elementCheckBoxHigh = document.getElementById('ext-el-high');
+            this.elementCheckBoxHighLabel = document.getElementById('ext-el-high-label');
+            this.elementButtonExpand = document.getElementById('ext-el-expand');
+            this.elementButtonDownload = document.getElementById('ext-el-download');
+            this.elementTextarea = document.getElementById('ext-el-textarea');
+            if (
+                this.elementWindow &&
+                this.elementSpanLoading &&
+                this.elementCheckBoxAuto &&
+                this.elementCheckBoxAutoLabel &&
+                this.elementCheckBoxHigh &&
+                this.elementCheckBoxHighLabel &&
+                this.elementButtonExpand &&
+                this.elementButtonDownload &&
+                this.elementTextarea
+            ) {
+                clearInterval(this.timerElements);
+                this.alert(['Elements found'], 'info');
+                this.loadConfigurations();
+                this.registerElementsListener();
+                this.elementCheckBoxAuto.classList.remove('disabled');
+                this.elementCheckBoxAutoLabel.classList.remove('disabled');
+                this.elementCheckBoxHigh.classList.remove('disabled');
+                this.elementCheckBoxHighLabel.classList.remove('disabled');
+                this.elementButtonExpand.classList.remove('disabled');
+            }
+        }, 250);
+    },
+    loadConfigurations: function () {
+        this.alert(['Loading configurations'], 'info');
+        const cAutoDownload = localStorage.getItem(this.keyAutomaticDownload);
+        if (cAutoDownload && cAutoDownload.toString() == 'true') {
+            this.automaticDownload = true;
+            this.elementCheckBoxAuto.checked = true;
+        }
+        const cFullQuality = localStorage.getItem(this.keyHighQuality);
+        if (cFullQuality && cFullQuality.toString() == 'true') {
+            this.highQuality = true;
+            this.elementCheckBoxHigh.checked = true;
+            this.setHighQualityFlag();
+        }
+        const cFullView = localStorage.getItem(this.keyFullView);
+        if (cFullView && cFullView.toString() == 'false') {
+            this.fullView = false;
+            this.elementWindow.classList.add('extension-hide');
+        }
+    },
+    registerElementsListener: function () {
+        this.elementCheckBoxAuto.addEventListener('click', (event) => {
+            this.checkBoxAutoProcess(event);
+        });
+        this.elementCheckBoxHigh.addEventListener('click', (event) => {
+            this.checkBoxHighProcess(event);
+        });
+        this.elementButtonExpand.addEventListener('click', () => {
+            this.buttonExpandProcess();
+        });
+        this.elementButtonDownload.addEventListener('click', () => {
+            this.startDownloadVideo();
+        });
+    },
     receive: function () {
         window.addEventListener('message', (event) => {
-            if (event.source !== window) return;
-            if (event.data.type && event.data.type === 'FROM_PAGE') {
-                if (event.data.content < 5) {
-                    console.error('>eTROO: Bad target URL');
+            if (event.source == window && event.data.type && event.data.type === 'FROM_PAGE') {
+                const receivedData = event.data.content;
+                if (receivedData.length < 10) {
+                    this.alert(['Bad target URL'], 'error');
                     return false;
                 }
-                eTROO.targetUrl = event.data.content;
-                console.info('>eTROO: Received data');
-                eTROO.generateVideoList();
+                eTROO.targetUrl = receivedData;
+                this.alert(['Received data', receivedData], 'info');
+                eTROO.generateVideoIndex();
             }
         });
     },
-    generateVideoList: async function () {
-        console.info('>eTROO: Generating video list');
-        let index = 0;
+    generateVideoIndex: async function () {
+        this.alert(['Generating video index...'], 'info');
+        this.elementSpanLoading.classList.remove('invisible');
         this.targetUrl = this.targetUrl.slice(0, -4);
         this.filesBaseName = this.targetUrl.split('/').pop();
+        this.videoListQuantity = 0;
         while (true) {
-            const url = `${this.targetUrl}${index}.ts`;
+            const url = `${this.targetUrl}${this.videoListQuantity}.ts`;
             try {
                 const response = await fetch(url, { method: 'HEAD' });
                 if (response.ok) {
-                    this.videoList.push(url);
-                    index++;
+                    this.videoListQuantity++;
                 } else {
                     break;
                 }
             } catch (error) {
-                console.error(`>eTROO: URL checking error ${url}`, error);
+                this.elementSpanLoading.classList.add('invisible');
+                this.alert(['URL checking error', url, error], 'error');
                 break;
             }
         }
-        console.info('>eTROO: Generated video list');
-        this.elementButtonDownload.classList.remove("disabled");
-        
+        this.elementSpanLoading.classList.add('invisible');
+        this.alert(['Generated video list'], 'info');
+        this.elementButtonDownload.classList.remove('disabled');
         if (this.automaticDownload) {
             this.startDownloadVideo();
         }
     },
     startDownloadVideo: async function () {
-        console.info('>eTROO: Starting download video');
-        if (this.videoList == []) {
-            console.info('>eTROO: The list is already empty');
+        this.alert(['Starting download video'], 'info');
+        if (this.videoListQuantity == 0) {
+            this.alert(['The list is already empty'], 'info');
             return false;
         }
         this.videoTotalData = [];
         this.memoryError = false;
-        let index = 0;
-        this.elementSpanLoading.classList.remove("invisible");
-        for (const url of this.videoList) {
-            index++;
+        this.elementSpanLoading.classList.remove('invisible');
+        for (let index = 0; index < this.videoListQuantity; index++) {
+            const currentFile = `${this.targetUrl}${index}.ts`;
+            const toShowFileName = `${this.filesBaseName}${index}.ts`;
             try {
-                await this.requestFile(url, index, 'video');
-                console.info('>eTROO: Successfully added', url.split('/').pop(), 'to download list');
+                await this.requestFile(currentFile, index, 'video');
+                this.alert(['Successfully added', toShowFileName, 'to downloaded list'], 'info');
             } catch (error) {
                 this.videoTotalData = [];
-                this.elementSpanLoading.classList.add("invisible");
-                console.info('>eTROO: Download failed');
+                this.elementSpanLoading.classList.add('invisible');
+                this.alert(['Download failed'], 'info');
                 return;
             }
         }
-        this.elementSpanLoading.classList.add("invisible");
+        this.elementSpanLoading.classList.add('invisible');
     },
     startDownloadPicture: async function () {
-        console.info('>eTROO: Starting download picture');
+        this.alert(['Starting download picture'], 'info');
         const element = document.querySelector('.video-pic img');
         if (!element) {
-            console.warn('>eTROO: Picture not found');
+            this.alert(['Picture not found'], 'warn');
             return;
         }
         const elementPath = element.src;
         if (!elementPath) {
-            console.warn('>eTROO: Picture source not found');
+            this.alert(['Picture source not found'], 'warn');
             return;
         }
         this.requestFile(elementPath, null, 'image');
@@ -214,17 +260,17 @@ var eTROO = new Object({
     requestFile: async function (url, index, type) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            xhr.responseType = "arraybuffer";
+            xhr.open('GET', url, true);
+            xhr.responseType = 'arraybuffer';
             xhr.onload = () => {
                 if (xhr.status === 200) {
                     resolve(this.dowloadQueue(xhr.response, index, type));
                 } else {
-                    reject('>eTROO: Failed to download file', url);
+                    reject(this.alert(['Failed to download file', url], 'error'));
                 }
             };
             xhr.onerror = () => {
-                reject('>eTROO: Network error while downloading file', url);
+                reject(this.alert(['Network error while downloading file', url], 'error'));
             };
             xhr.send();
         });
@@ -237,9 +283,9 @@ var eTROO = new Object({
                 } catch (error) {
                     this.videoTotalData = [];
                     this.memoryError = true;
-                    throw new Error('>eTROO: Error while accessing memory', error);
+                    this.alert(['Error while accessing memory', error], 'error');
                 }
-                if (this.videoList.length == index && !this.memoryError) {
+                if ((this.videoListQuantity - 1) == index && !this.memoryError) {
                     this.saveVideo();
                 }
                 break;
@@ -259,7 +305,7 @@ var eTROO = new Object({
         link.click();
         document.body.removeChild(link);
         this.videoTotalData = [];
-        console.log('>eTROO: File downloaded:', this.filesBaseName);
+        this.alert(['File downloaded:', this.filesBaseName], 'info');
         this.startDownloadPicture();
     },
     savePicture: function (data) {
@@ -270,33 +316,54 @@ var eTROO = new Object({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('>eTROO: Picture downloaded:', this.filesBaseName);
+        this.alert(['Picture downloaded:', this.filesBaseName], 'info');
     },
     checkBoxAutoProcess: function (data) {
+        this.alert(['Change automatic download flag'], 'info');
         localStorage.setItem(this.keyAutomaticDownload, data.target.checked);
     },
+    checkBoxHighProcess: function (data) {
+        localStorage.setItem(this.keyHighQuality, data.target.checked);
+        if (data.target.checked) {
+            this.setHighQualityFlag();
+        } else {
+            this.removeHighQuality();
+        }
+    },
     buttonExpandProcess: function () {
-        console.info('>eTROO: Change visibility status');
+        this.alert(['Change visibility status'], 'info');
         if (this.fullView) {
             this.fullView = false;
             localStorage.setItem(this.keyFullView, this.fullView);
-            this.elementWindow.classList.add("extension-hide");
+            this.elementWindow.classList.add('extension-hide');
         } else {
             this.fullView = true;
             localStorage.setItem(this.keyFullView, this.fullView);
-            this.elementWindow.classList.remove("extension-hide");
+            this.elementWindow.classList.remove('extension-hide');
         }
     },
+    setHighQualityFlag: function () {
+        const now = Date.now();
+        const hoursInMilliseconds = (Math.random() * 10 + 10) * 60 * 60 * 1000;
+        const randomMilliseconds = Math.random() * 400 + 100;
+        const futureTimestamp = now + hoursInMilliseconds + randomMilliseconds;
+        const futureTimestampUnix = (futureTimestamp / 1000).toFixed(3);
+        this.alert(['Set high quality flag'], 'info');
+        localStorage.setItem(this.keyHostQuality, `{"value":4,"expire":${futureTimestampUnix}}`);
+    },
+    removeHighQuality: function () {
+        this.alert(['Remove high quality flag'], 'info');
+        localStorage.removeItem(this.keyHostQuality);
+    },
     destroy: function () {
-        this.destroyed = true;
-        console.info('>eTROO: Exiting');
+        this.alert(['Exiting'], 'info');
     }
 });
 window.addEventListener('load', function () {
     eTROO.start();
 });
 
-/* Safe for work */
+/* Safe for work * /
 (() => {
     const page = document.getElementById('page');
     if (page) page.classList.add('invisible');
@@ -306,9 +373,9 @@ window.addEventListener('load', function () {
     if (head__menu_line) head__menu_line.classList.add('invisible');
     const head__menu_mobile = document.querySelector('.mobile-portrait-show');
     if (head__menu_mobile) head__menu_mobile.classList.add('invisible');
-    document.title = "Hide";
+    document.title = 'Hide';
 })();
-
+/* */
 
 
 

@@ -4,9 +4,6 @@
     "version": "1.0",
     "description": "An automatic video downloader for your favorite streaming platform",
     "author": "Diego Rodrigues - @devdiegorodrigues",
-    "developer": {
-        "name": "Diego Rodrigues - @devdiegorodrigues"
-    },
     "permissions": [
         "activeTab",
         "tabs",

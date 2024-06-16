@@ -2,7 +2,7 @@
 :root {
     --box-width: 14.5rem;
     --box-height: 11rem;
-    --box-background-color: RGBA(0, 0, 0, .7);
+    --box-background-color: RGBA(0, 0, 0, .85);
     --box-color: white;
     --box-border-radius: .45rem;
     --frame-padding: .25rem;
@@ -68,6 +68,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    flex-direction: row;
     height: 2.3rem;
 }
 
@@ -112,7 +113,7 @@
     margin: 0 !important;
 }
 
-#ext-el-auto {
+#ext-el-auto, #ext-el-high {
     transform: scale(2) translateX(7px);
     margin-right: 1.4rem;
 }

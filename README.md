@@ -1,5 +1,11 @@
 # Troo X-Video Downloader
 
+<h3 align=center>An x-videos downloader plug-in<h3>
+<div align=center>
+  
+  ![Texto alternativo](https://github.com/developerdiegorodrigues/troo-x-video-downloader/blob/main/other/Interface%20v2%20-%20Final.png)
+</div>
+
 >**En-us:**
 
 An automatic video downloader for your favorite streaming platform 😏
@@ -7,6 +13,8 @@ An automatic video downloader for your favorite streaming platform 😏
 >**Pt-br:**
 
 Um baixador automático de vídeos para sua plataforma de streaming preferida 😏
+<br/>
+<br/>
 
 ## Instructions
 
